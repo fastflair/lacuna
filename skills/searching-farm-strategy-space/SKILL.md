@@ -1,13 +1,9 @@
 ---
-name: farm-economics
-description: >
-  How lacuna serves as the opportunity-search stage of a farm economic discovery
-  engine (CAPPZ HARVEST): numeric decision facets, invertible encoding, decoding
-  void centers into candidate strategies, and the boundary between "unexplored"
-  and "profitable".
+name: searching-farm-strategy-space
+description: Uses lacuna as the whitespace-search stage of a farm economic discovery engine: numeric decision facets, the invertible numeric encoding, decoding void centers into candidate strategies, signal choices and the browser lacuna-wasm build. Use when connecting lacuna to farm or other numeric decision spaces, building lacuna-wasm, or deciding what a void means economically.
 metadata:
-  home: ~/src/witt3rd/lacuna/skills/farm-economics
-  aliases: [lacuna-ag, harvest-discovery]
+  home: ~/src/witt3rd/lacuna/skills/searching-farm-strategy-space
+  aliases: [farm-economics, lacuna-ag, harvest-discovery]
 ---
 
 # lacuna as a farm economic discovery engine
