@@ -52,7 +52,7 @@ crates/lacuna-wasm   wasm32 C-ABI JSON bridge (`lacuna_call`) to lacuna-core for
 
 Numeric decision domains (farm inputs, sale timing, contract mix) use
 `lacuna_core::numeric`: an invertible encoding whose void centers decode back to
-concrete parameter values. See [`farm-economics`](skills/farm-economics/SKILL.md).
+concrete parameter values. See [`searching-farm-strategy-space`](skills/searching-farm-strategy-space/SKILL.md).
 
 ---
 
@@ -115,8 +115,8 @@ cargo build -p lacuna-wasm --target wasm32-unknown-unknown --profile wasm --lock
 
 | Skill | One Line |
 |---|---|
-| [`lacuna`](skills/lacuna/SKILL.md) | Repo caretaker: house git (`master` iteration, rebase), CI gates, `rung` tag pinning, release procedure |
-| [`pilot-cli`](skills/pilot-cli/SKILL.md) | How an agent pilots `lacuna` via CLI (`ingest → voids → probe → synthesize → field`) with `--json` |
-| [`domain-onboarding`](skills/domain-onboarding/SKILL.md) | Onboarding any domain (VC, Patents, Pharma, SaaS, Research) onto the 4-layer input contract |
-| [`farm-economics`](skills/farm-economics/SKILL.md) | lacuna as the whitespace-search stage of the CAPPZ HARVEST farm economic discovery engine |
-| [`steam-benchmark`](skills/steam-benchmark/SKILL.md) | Playbook for the 100,000+ Steam Games Whitespace Explorer (`@SyntheticBeef` challenge) |
+| [`maintaining-lacuna`](skills/maintaining-lacuna/SKILL.md) | Repo caretaker: house git (`master` iteration, rebase), CI gates, `rung` tag pinning, release procedure |
+| [`piloting-lacuna-cli`](skills/piloting-lacuna-cli/SKILL.md) | How an agent pilots `lacuna` via CLI (`ingest → voids → probe → synthesize → field`) with `--json` |
+| [`onboarding-lacuna-domains`](skills/onboarding-lacuna-domains/SKILL.md) | Onboarding any domain (VC, Patents, Pharma, SaaS, Research) onto the 4-layer input contract |
+| [`searching-farm-strategy-space`](skills/searching-farm-strategy-space/SKILL.md) | lacuna as the whitespace-search stage of the CAPPZ HARVEST farm economic discovery engine |
+| [`running-steam-benchmark`](skills/running-steam-benchmark/SKILL.md) | Playbook for the 100,000+ Steam Games Whitespace Explorer (`@SyntheticBeef` challenge) |
