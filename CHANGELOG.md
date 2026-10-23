@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 (2026-10-23)
+
+- `lacuna-wasm`: `{"op":"embed","texts":[…]}` returns the same deterministic text embedding `find_voids` applies to text facets, so browser callers can place entities and void centers on one map (CAPPZ global market discovery).
 
 - Skills follow the Anthropic skill-authoring best practices: gerund names (`maintaining-lacuna`, `piloting-lacuna-cli`, `onboarding-lacuna-domains`, `searching-farm-strategy-space`, `running-steam-benchmark`; old names kept as `metadata.aliases`), third-person descriptions that say what and when, and three `evaluations.json` scenarios each. `crates/lacuna-core/tests/agent_skills.rs` enforces frontmatter, body length and evaluations.
 
