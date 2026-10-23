@@ -1,0 +1,14 @@
+[package]
+name = "lacuna-gpu"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "WGSL topographic potential-field shaders and interactive WebGPU/SVG spatial manifold renderers for lacuna"
+
+[dependencies]
+lacuna-core = { path = "../lacuna-core" }
+lacuna-rung = { path = "../lacuna-rung" }
+serde.workspace = true
+serde_json.workspace = true

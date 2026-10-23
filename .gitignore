@@ -1,0 +1,6 @@
+target/
+.rung/
+.lacuna/
+__pycache__/
+*.pyc
+*.wsbin

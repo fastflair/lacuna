@@ -1,0 +1,24 @@
+[workspace]
+members = [
+    "crates/lacuna-core",
+    "crates/lacuna-rung",
+    "crates/lacuna-gpu",
+    "crates/lacuna-cli",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/witt3rd/lacuna"
+
+[workspace.dependencies]
+rung = { git = "https://github.com/witt3rd/rung", tag = "v0.3.2" }
+rung-std = { git = "https://github.com/witt3rd/rung", tag = "v0.3.2" }
+rung-agent-core = { git = "https://github.com/witt3rd/rung", tag = "v0.3.2" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+sha2 = "0.10"

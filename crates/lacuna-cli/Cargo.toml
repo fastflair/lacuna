@@ -1,0 +1,21 @@
+[package]
+name = "lacuna-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Agent-first CLI for lacuna: high-dimensional whitespace discovery, rung ladder synthesis, and WebGPU/SVG visualization"
+publish = false
+
+[[bin]]
+name = "lacuna"
+path = "src/main.rs"
+
+[dependencies]
+lacuna-core = { path = "../lacuna-core" }
+lacuna-rung = { path = "../lacuna-rung" }
+lacuna-gpu = { path = "../lacuna-gpu" }
+rung-std.workspace = true
+serde.workspace = true
+serde_json.workspace = true

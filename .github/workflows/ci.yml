@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: fmt
+        run: cargo fmt --check
+      - name: clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: rustdoc
+        run: RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --locked
+      - name: test
+        run: cargo test --workspace --locked
+      - name: cli smoke (steam demo)
+        run: cargo run -q -p lacuna-cli --locked -- demo steam --top-k 2 --json >/dev/null
