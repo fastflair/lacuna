@@ -11,6 +11,7 @@
 //! {"op":"find_voids","schema":{...},"entities":[...],"config":{"top_k":5}}
 //! {"op":"encode_numeric","axes":[...],"values":[160.0,"store"]}
 //! {"op":"decode_numeric","axes":[...],"vector":[0.1,0.2]}
+//! {"op":"embed","texts":["text facet", ...]}   (deterministic text embedding, DEFAULT_EMBED_DIM)
 //! ```
 //!
 //! Responses are `{"ok":true,"result":...}` or `{"ok":false,"error":"..."}`.
@@ -19,7 +20,7 @@
 
 use lacuna_core::{
     DEFAULT_EMBED_DIM, DomainEntity, DomainSchema, NumericAxis, NumericValue, VoidSolverConfig,
-    decode_numeric, encode_numeric, find_interior_voids,
+    decode_numeric, deterministic_embed, encode_numeric, find_interior_voids,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -44,6 +45,11 @@ enum Request {
     DecodeNumeric {
         axes: Vec<NumericAxis>,
         vector: Vec<f32>,
+    },
+    /// The same deterministic text embedding `find_voids` applies to text facets,
+    /// so callers can place entities and void centers on one map.
+    Embed {
+        texts: Vec<String>,
     },
 }
 
@@ -75,6 +81,12 @@ fn dispatch(req: Request) -> Result<Value, String> {
         Request::EncodeNumeric { axes, values } => encode_numeric(&axes, &values).map(|v| json!(v)),
         Request::DecodeNumeric { axes, vector } => decode_numeric(&axes, &vector)
             .and_then(|d| serde_json::to_value(d).map_err(|e| e.to_string())),
+        Request::Embed { texts } => Ok(json!(
+            texts
+                .iter()
+                .map(|t| deterministic_embed(t, DEFAULT_EMBED_DIM))
+                .collect::<Vec<_>>()
+        )),
     }
 }
 
@@ -181,5 +193,16 @@ mod tests {
         let m = dec["result"][1]["value"].as_f64().unwrap();
         assert!((60.0..=220.0).contains(&n), "n={n}");
         assert!((0.0..=9.0).contains(&m), "m={m}");
+    }
+
+    #[test]
+    fn embed_matches_find_voids_text_embedding() {
+        let out = parse(&handle(
+            r#"{"op":"embed","texts":["3d printed pet toys","3d printed pet toys"]}"#,
+        ));
+        let v = out["result"].as_array().unwrap();
+        assert_eq!(v.len(), 2);
+        assert_eq!(v[0], v[1]);
+        assert_eq!(v[0].as_array().unwrap().len(), DEFAULT_EMBED_DIM);
     }
 }
