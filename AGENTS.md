@@ -3,6 +3,8 @@
 Domain-agnostic high-dimensional whitespace analyzer, finder, visualizer, and explorer.
 Built in Rust on [`rung`](https://github.com/witt3rd/rung) (`ladder!`, `rung_std::decide`, `rung_std::llm`, `rung-agent-core`) and `wgpu`/WGSL shaders.
 
+**Live Interactive Demo (GitHub Pages):** <https://witt3rd.github.io/lacuna/>
+
 > `README.md` is a **symlink to this file**. Edit only `AGENTS.md`.
 > Custody is `AGENTS.md` + `skills/`; no `.agent/` folder, no inhabit, no formal handoff.
 
@@ -85,8 +87,8 @@ cargo run -q -p lacuna-cli -- probe void-01 --json
 # 4. Run the rung::ladder! synthesis + rung_std::decide judge + closed-loop proof
 cargo run -q -p lacuna-cli -- synthesize void-01 --json
 
-# 5. Run the flagship @SyntheticBeef Steam Games Whitespace Explorer & emit SVG + WebGPU HTML
-cargo run -q -p lacuna-cli -- demo steam --count 60 --top-k 5 --svg steam_manifold.svg --html steam_explorer.html
+# 5. Run the flagship @SyntheticBeef Steam Games Whitespace Explorer & emit SVG + WebGPU HTML into out/
+cargo run -q -p lacuna-cli -- demo steam --count 60 --top-k 5 --svg out/steam_manifold.svg --html out/steam_explorer.html
 ```
 
 ---

@@ -140,7 +140,7 @@ pub fn render_svg_manifold(bundle: &ExplorerBundle, width: usize, height: usize)
 
 /// Renders a self-contained interactive WebGPU + Shader Canvas Explorer HTML file
 /// embedding the full `ExplorerBundle` JSON, the WGSL shader (`field.wgsl`), interactive
-/// supply/demand/whitespace shader sliders, clickable Voronoi cells, and the live
+/// supply/demand/whitespace shader sliders, clickable Voronoi cells and game nodes, and the live
 /// Ghost Steam Store Page + `rung_std::decide` Bayesian viability inspector.
 pub fn render_webgpu_explorer_html(bundle: &ExplorerBundle) -> Result<String, String> {
     let data_json =
@@ -173,46 +173,74 @@ pub fn render_webgpu_explorer_html(bundle: &ExplorerBundle) -> Result<String, St
     color: var(--text);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     display: grid;
-    grid-template-columns: 1fr 440px;
+    grid-template-columns: 1fr 460px;
     height: 100vh;
     overflow: hidden;
+  }}
+  @media (max-width: 980px) {{
+    body {{ grid-template-columns: 1fr; grid-template-rows: 55vh 45vh; }}
   }}
   #stage {{
     position: relative;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
   }}
   header {{
-    padding: 12px 18px;
-    background: rgba(15, 23, 42, 0.92);
+    padding: 10px 16px;
+    background: rgba(15, 23, 42, 0.95);
     border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
   }}
-  header h1 {{ font-size: 15px; color: var(--cyan); letter-spacing: 0.04em; }}
-  .controls {{ display: flex; gap: 14px; align-items: center; font-size: 12px; color: var(--muted); }}
-  .controls label {{ display: flex; align-items: center; gap: 6px; }}
-  #canvas-wrap {{ position: relative; flex: 1; background: #05080f; }}
-  canvas {{ width: 100%; height: 100%; display: block; cursor: crosshair; }}
+  .brand {{ display: flex; align-items: center; gap: 10px; }}
+  header h1 {{ font-size: 14px; color: var(--cyan); letter-spacing: 0.04em; }}
+  .pill {{
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 245, 212, 0.4);
+    color: var(--cyan);
+    background: rgba(0, 245, 212, 0.08);
+    text-decoration: none;
+  }}
+  .controls {{ display: flex; gap: 14px; align-items: center; font-size: 11px; color: var(--muted); flex-wrap: wrap; }}
+  .controls label {{ display: flex; align-items: center; gap: 5px; cursor: pointer; }}
+  #canvas-wrap {{ position: relative; flex: 1; background: #05080f; overflow: hidden; }}
+  canvas {{ position: absolute; inset: 0; width: 100%; height: 100%; display: block; }}
+  #overlay {{ cursor: pointer; }}
+  #hud-legend {{
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    background: rgba(7, 11, 18, 0.86);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--muted);
+    pointer-events: none;
+    line-height: 1.6;
+  }}
   aside {{
     background: var(--panel);
     border-left: 1px solid var(--border);
-    padding: 16px;
+    padding: 14px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
   }}
   .card {{
-    background: rgba(7, 11, 18, 0.75);
+    background: rgba(7, 11, 18, 0.78);
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 12px;
   }}
-  .card h2 {{ font-size: 13px; color: var(--cyan); margin-bottom: 6px; }}
+  .card h2 {{ font-size: 11px; color: var(--cyan); margin-bottom: 6px; letter-spacing: 0.05em; }}
   .card h3 {{ font-size: 15px; color: #fff; margin-bottom: 6px; }}
   .badge {{
     display: inline-block;
@@ -225,47 +253,60 @@ pub fn render_webgpu_explorer_html(bundle: &ExplorerBundle) -> Result<String, St
     color: var(--cyan);
     border: 1px solid rgba(0, 245, 212, 0.35);
   }}
-  .void-list {{ display: flex; flex-direction: column; gap: 6px; }}
+  .void-list {{ display: flex; flex-direction: column; gap: 6px; max-height: 210px; overflow-y: auto; }}
   .void-btn {{
     text-align: left;
     background: rgba(15, 23, 42, 0.8);
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 5px;
-    padding: 8px 10px;
+    padding: 7px 10px;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 11px;
     cursor: pointer;
+    transition: border-color 0.15s;
   }}
-  .void-btn.active {{ border-color: var(--cyan); background: rgba(0, 245, 212, 0.1); }}
-  .meter {{ height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin: 4px 0 8px; }}
+  .void-btn:hover {{ border-color: #38bdf8; }}
+  .void-btn.active {{ border-color: var(--cyan); background: rgba(0, 245, 212, 0.12); }}
+  .meter {{ height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin: 3px 0 7px; }}
   .meter > div {{ height: 100%; background: var(--cyan); }}
   p {{ font-size: 12px; line-height: 1.5; color: var(--muted); }}
-  pre {{ font-size: 11px; color: #cbd5e1; white-space: pre-wrap; word-break: break-word; }}
+  pre {{ font-size: 10px; color: #cbd5e1; white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow-y: auto; }}
 </style>
 </head>
 <body>
 <div id="stage">
   <header>
-    <h1>LACUNA // {title}</h1>
+    <div class="brand">
+      <h1>LACUNA // {title}</h1>
+      <span id="gpu-badge" class="pill">Initializing Shader...</span>
+      <a class="pill" href="https://github.com/witt3rd/lacuna" target="_blank" rel="noopener">GitHub: witt3rd/lacuna</a>
+    </div>
     <div class="controls">
       <label>Whitespace Gain <input id="gain" type="range" min="0.4" max="2.5" step="0.05" value="1.35"/></label>
       <label>Supply Sigma <input id="sigmaS" type="range" min="0.08" max="0.35" step="0.01" value="0.16"/></label>
-      <label>Show Voronoi <input id="showVor" type="checkbox" checked/></label>
+      <label><input id="showVor" type="checkbox" checked/> Voronoi &amp; Delaunay Tethers</label>
+      <label><input id="showLabels" type="checkbox" checked/> Labels</label>
     </div>
   </header>
   <div id="canvas-wrap">
-    <canvas id="manifold"></canvas>
+    <canvas id="gpu-canvas"></canvas>
+    <canvas id="overlay"></canvas>
+    <div id="hud-legend">
+      <div><span style="color:#00f5d4">●</span> <strong>Cyan Star + Dashed Cell</strong>: Interior Delaunay Whitespace Void (click to inspect)</div>
+      <div><span style="color:#f43f5e">●</span> <strong>Rose Node</strong>: Existing Steam Game Cluster (click to inspect facets)</div>
+      <div><span style="color:#00f5d4">■</span> <strong>Cyan Basin</strong>: High Demand Gravity × Low Incumbent Supply</div>
+    </div>
   </div>
 </div>
 <aside>
   <div class="card">
-    <h2>RANKED INTERIOR VOIDS (DELAUNAY SPHERES)</h2>
+    <h2>RANKED INTERIOR VOIDS (CLICK TO EXPLORE)</h2>
     <div id="void-list" class="void-list"></div>
   </div>
   <div class="card" id="inspector"></div>
   <div class="card">
-    <h2>WGSL TOPOGRAPHIC SHADER SOURCE</h2>
+    <h2>WGSL TOPOGRAPHIC POTENTIAL FIELD SHADER</h2>
     <pre id="wgsl-box"></pre>
   </div>
 </aside>
@@ -275,64 +316,157 @@ const WGSL_SOURCE = {wgsl_escaped};
 document.getElementById('wgsl-box').textContent = WGSL_SOURCE.trim();
 
 let selectedVoidIdx = 0;
-const canvas = document.getElementById('manifold');
-const ctx = canvas.getContext('2d');
+let selectedEntityIdx = null;
+let hoveredItem = null;
+
+const gpuCanvas = document.getElementById('gpu-canvas');
+const overlay = document.getElementById('overlay');
+const ctx = overlay.getContext('2d');
 const gainInput = document.getElementById('gain');
 const sigmaSInput = document.getElementById('sigmaS');
 const showVorInput = document.getElementById('showVor');
+const showLabelsInput = document.getElementById('showLabels');
+const gpuBadge = document.getElementById('gpu-badge');
 
-function resize() {{
-  canvas.width = canvas.clientWidth * window.devicePixelRatio;
-  canvas.height = canvas.clientHeight * window.devicePixelRatio;
-  draw();
+let webgpuState = null;
+
+async function initWebGPU() {{
+  if (!navigator.gpu) return false;
+  try {{
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) return false;
+    const device = await adapter.requestDevice();
+    const context = gpuCanvas.getContext('webgpu');
+    if (!context) return false;
+    const format = navigator.gpu.getPreferredCanvasFormat();
+    context.configure({{ device, format, alphaMode: 'opaque' }});
+
+    const shaderModule = device.createShaderModule({{ code: WGSL_SOURCE }});
+    const pipeline = device.createRenderPipeline({{
+      layout: 'auto',
+      vertex: {{ module: shaderModule, entryPoint: 'vs_main' }},
+      fragment: {{ module: shaderModule, entryPoint: 'fs_main', targets: [{{ format }}] }},
+      primitive: {{ topology: 'triangle-list' }},
+    }});
+
+    const entities = BUNDLE.snapshot.entities;
+    const coords = BUNDLE.entity_coords_2d;
+    const entityData = new Float32Array(entities.length * 4);
+    for (let i = 0; i < entities.length; i++) {{
+      entityData[i * 4 + 0] = coords[i][0];
+      entityData[i * 4 + 1] = coords[i][1];
+      entityData[i * 4 + 2] = entities[i].demand_signal;
+      entityData[i * 4 + 3] = entities[i].quality_signal;
+    }}
+
+    const entityBuffer = device.createBuffer({{
+      size: Math.max(entityData.byteLength, 16),
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    }});
+    device.queue.writeBuffer(entityBuffer, 0, entityData);
+
+    const uniformBuffer = device.createBuffer({{
+      size: 16,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    }});
+
+    const bindGroup = device.createBindGroup({{
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        {{ binding: 0, resource: {{ buffer: entityBuffer }} }},
+        {{ binding: 1, resource: {{ buffer: uniformBuffer }} }},
+      ],
+    }});
+
+    webgpuState = {{ device, context, pipeline, uniformBuffer, bindGroup, count: entities.length }};
+    gpuBadge.textContent = 'WebGPU WGSL Active';
+    return true;
+  }} catch (err) {{
+    console.warn('WebGPU fallback to Canvas2D:', err);
+    return false;
+  }}
 }}
-window.addEventListener('resize', resize);
 
 function toPx(pt) {{
-  const w = canvas.width, h = canvas.height;
+  const w = overlay.width, h = overlay.height;
   return [(pt[0] + 1) * 0.5 * w, (1 - (pt[1] + 1) * 0.5) * h];
 }}
 
+function fromPx(px, py) {{
+  const w = overlay.width, h = overlay.height;
+  return [(px / w) * 2 - 1, 1 - (py / h) * 2];
+}}
+
+function renderWebGPUField(gain, sigmaS) {{
+  if (!webgpuState) return false;
+  const {{ device, context, pipeline, uniformBuffer, bindGroup, count }} = webgpuState;
+  const buf = new ArrayBuffer(16);
+  new Uint32Array(buf, 0, 1)[0] = count;
+  new Float32Array(buf, 4, 3).set([sigmaS, 0.34, gain]);
+  device.queue.writeBuffer(uniformBuffer, 0, buf);
+
+  const encoder = device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({{
+    colorAttachments: [{{
+      view: context.getCurrentTexture().createView(),
+      loadOp: 'clear',
+      clearValue: {{ r: 0.03, g: 0.05, b: 0.08, a: 1.0 }},
+      storeOp: 'store',
+    }}],
+  }});
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup);
+  pass.draw(6);
+  pass.end();
+  device.queue.submit([encoder.finish()]);
+  return true;
+}}
+
 function draw() {{
-  const w = canvas.width, h = canvas.height;
+  const w = overlay.width, h = overlay.height;
   ctx.clearRect(0, 0, w, h);
   const gain = parseFloat(gainInput.value);
   const sigmaS = parseFloat(sigmaSInput.value);
   const sigmaD = 0.34;
-  const inv2S = 1 / (2 * sigmaS * sigmaS);
-  const inv2D = 1 / (2 * sigmaD * sigmaD);
 
-  const grid = 64;
-  const cw = Math.ceil(w / grid), ch = Math.ceil(h / grid);
   const entities = BUNDLE.snapshot.entities;
   const coords = BUNDLE.entity_coords_2d;
 
-  for (let r = 0; r < grid; r++) {{
-    const wy = 1 - 2 * (r + 0.5) / grid;
-    for (let c = 0; c < grid; c++) {{
-      const wx = -1 + 2 * (c + 0.5) / grid;
-      let sup = 0, dem = 0;
-      for (let i = 0; i < entities.length; i++) {{
-        const dx = wx - coords[i][0], dy = wy - coords[i][1];
-        const r2 = dx * dx + dy * dy;
-        sup += Math.exp(-r2 * inv2S);
-        const pull = Math.max(entities[i].demand_signal, 0.1) * entities[i].quality_signal;
-        const ring = Math.min(r2 / (sigmaD * sigmaD), 2.5) * Math.exp(-r2 * inv2D);
-        dem += pull * ring;
-      }}
-      const ns = Math.min(sup / Math.max(entities.length * 0.22, 1), 1);
-      const nd = Math.min(dem / Math.max(entities.length * 1.6, 1), 1);
-      const env = Math.max(1 - 0.35 * (wx * wx + wy * wy), 0.1);
-      const ws = Math.min(nd * Math.pow(1 - ns, 1.35) * env * gain, 1);
+  if (!renderWebGPUField(gain, sigmaS)) {{
+    gpuBadge.textContent = 'Shader Canvas2D Active';
+    const inv2S = 1 / (2 * sigmaS * sigmaS);
+    const inv2D = 1 / (2 * sigmaD * sigmaD);
+    const grid = 64;
+    const cw = Math.ceil(w / grid), ch = Math.ceil(h / grid);
 
-      const red = Math.round(10 + 195 * ns);
-      const grn = Math.round(16 + 220 * ws);
-      const blu = Math.round(28 + 225 * ws + 55 * ns);
-      ctx.fillStyle = `rgb(${{red}},${{grn}},${{blu}})`;
-      ctx.fillRect(c * (w / grid), r * (h / grid), cw + 1, ch + 1);
+    for (let r = 0; r < grid; r++) {{
+      const wy = 1 - 2 * (r + 0.5) / grid;
+      for (let c = 0; c < grid; c++) {{
+        const wx = -1 + 2 * (c + 0.5) / grid;
+        let sup = 0, dem = 0;
+        for (let i = 0; i < entities.length; i++) {{
+          const dx = wx - coords[i][0], dy = wy - coords[i][1];
+          const r2 = dx * dx + dy * dy;
+          sup += Math.exp(-r2 * inv2S);
+          const pull = Math.max(entities[i].demand_signal, 0.1) * entities[i].quality_signal;
+          const ring = Math.min(r2 / (sigmaD * sigmaD), 2.5) * Math.exp(-r2 * inv2D);
+          dem += pull * ring;
+        }}
+        const ns = Math.min(sup / Math.max(entities.length * 0.18, 1), 1);
+        const nd = Math.min(dem / Math.max(entities.length * 1.4, 1), 1);
+        const env = Math.max(1 - 0.35 * (wx * wx + wy * wy), 0.1);
+        const ws = Math.min(nd * Math.pow(1 - ns, 1.35) * env * gain, 1);
+
+        const red = Math.round(10 + 195 * ns);
+        const grn = Math.round(16 + 220 * ws);
+        const blu = Math.round(28 + 225 * ws + 55 * ns);
+        ctx.fillStyle = `rgb(${{red}},${{grn}},${{blu}})`;
+        ctx.fillRect(c * (w / grid), r * (h / grid), cw + 1, ch + 1);
+      }}
     }}
   }}
 
+  const dpr = window.devicePixelRatio || 1;
   const activeVoid = BUNDLE.voids[selectedVoidIdx];
   if (showVorInput.checked && activeVoid && activeVoid.voronoi_polygon.length >= 3) {{
     ctx.beginPath();
@@ -341,11 +475,11 @@ function draw() {{
       if (idx === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
     }});
     ctx.closePath();
-    ctx.fillStyle = 'rgba(0, 245, 212, 0.16)';
+    ctx.fillStyle = 'rgba(0, 245, 212, 0.14)';
     ctx.fill();
     ctx.strokeStyle = '#00f5d4';
-    ctx.lineWidth = 2 * window.devicePixelRatio;
-    ctx.setLineDash([6, 4]);
+    ctx.lineWidth = 2 * dpr;
+    ctx.setLineDash([6 * dpr, 4 * dpr]);
     ctx.stroke();
     ctx.setLineDash([]);
 
@@ -357,8 +491,8 @@ function draw() {{
         ctx.beginPath();
         ctx.moveTo(vx, vy);
         ctx.lineTo(nx, ny);
-        ctx.strokeStyle = 'rgba(0, 245, 212, 0.7)';
-        ctx.lineWidth = 1.5 * window.devicePixelRatio;
+        ctx.strokeStyle = 'rgba(0, 245, 212, 0.78)';
+        ctx.lineWidth = 1.6 * dpr;
         ctx.stroke();
       }}
     }});
@@ -366,29 +500,72 @@ function draw() {{
 
   entities.forEach((e, i) => {{
     const [px, py] = toPx(coords[i]);
+    const isSelected = selectedEntityIdx === i;
+    const isSynthetic = e.metadata && e.metadata.synthetic_cluster_of;
+    const radius = (isSelected ? 7.5 : (isSynthetic ? 3.5 : 5.5)) * dpr;
     ctx.beginPath();
-    ctx.arc(px, py, 5 * window.devicePixelRatio, 0, Math.PI * 2);
-    ctx.fillStyle = '#f43f5e';
+    ctx.arc(px, py, radius, 0, Math.PI * 2);
+    ctx.fillStyle = isSelected ? '#f59e0b' : (isSynthetic ? 'rgba(244, 63, 94, 0.65)' : '#f43f5e');
     ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = isSelected ? '#fff' : 'rgba(255,255,255,0.75)';
+    ctx.lineWidth = (isSelected ? 2 : 1) * dpr;
     ctx.stroke();
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = `${{11 * window.devicePixelRatio}}px monospace`;
-    ctx.fillText(e.name, px + 8 * window.devicePixelRatio, py + 4 * window.devicePixelRatio);
+
+    if (showLabelsInput.checked && (!isSynthetic || isSelected)) {{
+      ctx.fillStyle = isSelected ? '#fde68a' : '#e2e8f0';
+      ctx.font = `${{11 * dpr}}px monospace`;
+      ctx.fillText(e.name, px + (radius + 5 * dpr), py + 3.5 * dpr);
+    }}
   }});
 
   BUNDLE.voids.forEach((v, idx) => {{
     const [vx, vy] = toPx(v.coords_2d);
+    const active = idx === selectedVoidIdx && selectedEntityIdx === null;
     ctx.beginPath();
-    ctx.arc(vx, vy, (idx === selectedVoidIdx ? 9 : 6) * window.devicePixelRatio, 0, Math.PI * 2);
-    ctx.fillStyle = idx === selectedVoidIdx ? '#00f5d4' : '#38bdf8';
+    ctx.arc(vx, vy, (active ? 9.5 : 6.5) * dpr, 0, Math.PI * 2);
+    ctx.fillStyle = active ? '#00f5d4' : '#38bdf8';
     ctx.fill();
     ctx.strokeStyle = '#070b12';
-    ctx.lineWidth = 2 * window.devicePixelRatio;
+    ctx.lineWidth = 2.2 * dpr;
     ctx.stroke();
+
+    if (showLabelsInput.checked) {{
+      ctx.fillStyle = active ? '#00f5d4' : '#7dd3fc';
+      ctx.font = `bold ${{11 * dpr}}px monospace`;
+      ctx.fillText(`#${{v.rank}} ${{v.void_id}}`, vx + 11 * dpr, vy - 5 * dpr);
+    }}
   }});
 }}
+
+overlay.addEventListener('click', (ev) => {{
+  const rect = overlay.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const mx = (ev.clientX - rect.left) * dpr;
+  const my = (ev.clientY - rect.top) * dpr;
+
+  // 1. Check void centers first
+  for (let i = 0; i < BUNDLE.voids.length; i++) {{
+    const [vx, vy] = toPx(BUNDLE.voids[i].coords_2d);
+    if (Math.hypot(mx - vx, my - vy) <= 14 * dpr) {{
+      selectedVoidIdx = i;
+      selectedEntityIdx = null;
+      renderSidebar();
+      draw();
+      return;
+    }}
+  }}
+
+  // 2. Check corpus entities
+  for (let i = 0; i < BUNDLE.snapshot.entities.length; i++) {{
+    const [ex, ey] = toPx(BUNDLE.entity_coords_2d[i]);
+    if (Math.hypot(mx - ex, my - ey) <= 10 * dpr) {{
+      selectedEntityIdx = i;
+      renderSidebar();
+      draw();
+      return;
+    }}
+  }}
+}});
 
 function renderSidebar() {{
   const listEl = document.getElementById('void-list');
@@ -396,20 +573,40 @@ function renderSidebar() {{
   BUNDLE.voids.forEach((v, idx) => {{
     const opp = BUNDLE.opportunities.find(o => o.void_id === v.void_id);
     const btn = document.createElement('button');
-    btn.className = 'void-btn' + (idx === selectedVoidIdx ? ' active' : '');
+    btn.className = 'void-btn' + (idx === selectedVoidIdx && selectedEntityIdx === null ? ' active' : '');
     const title = opp ? opp.hypothesis.title : v.void_id;
     btn.innerHTML = `<strong>#${{v.rank}} ${{v.void_id}}</strong> — ${{title}}<br/><span style="color:#94a3b8">Radius: ${{v.radius.toFixed(3)}} | Opportunity: ${{v.opportunity_score.toFixed(3)}}</span>`;
-    btn.onclick = () => {{ selectedVoidIdx = idx; renderSidebar(); draw(); }};
+    btn.onclick = () => {{ selectedVoidIdx = idx; selectedEntityIdx = null; renderSidebar(); draw(); }};
     listEl.appendChild(btn);
   }});
 
+  const insp = document.getElementById('inspector');
+
+  if (selectedEntityIdx !== null) {{
+    const ent = BUNDLE.snapshot.entities[selectedEntityIdx];
+    const tagsHtml = ent.tags.map(t => `<span class="badge">${{t}}</span>`).join('');
+    const facetsHtml = Object.entries(ent.facets).map(([k, val]) =>
+      `<div style="margin-bottom:6px"><strong style="color:#f43f5e">${{k}}</strong>: ${{val}}</div>`
+    ).join('');
+    insp.innerHTML = `
+      <h2>EXISTING CORPUS ENTITY (${{ent.id}})</h2>
+      <h3>${{ent.name}}</h3>
+      <div style="margin-bottom:8px">${{tagsHtml}}</div>
+      <p style="margin-bottom:10px;color:#e2e8f0">${{ent.summary}}</p>
+      <h2>SIGNALS</h2>
+      <p style="margin-bottom:10px">Demand Signal: <strong>${{ent.demand_signal.toFixed(2)}}</strong> | Quality Ratio: <strong>${{(ent.quality_signal * 100).toFixed(0)}}%</strong></p>
+      <h2>DECOMPOSED DESIGN FACETS</h2>
+      <p>${{facetsHtml}}</p>
+    `;
+    return;
+  }}
+
   const v = BUNDLE.voids[selectedVoidIdx];
   const opp = BUNDLE.opportunities.find(o => o.void_id === v.void_id);
-  const insp = document.getElementById('inspector');
   if (!v) return;
 
   const neighborsHtml = v.boundary_neighbors.map(n =>
-    `<div style="margin-bottom:6px">• <strong>${{n.name}}</strong> (d=${{n.distance.toFixed(3)}}, weight=${{n.simplex_weight.toFixed(2)}})</div>`
+    `<div style="margin-bottom:6px">• <strong>${{n.name}}</strong> (d=${{n.distance.toFixed(3)}}, simplex weight=${{n.simplex_weight.toFixed(2)}})</div>`
   ).join('');
 
   if (opp) {{
@@ -441,9 +638,24 @@ function renderSidebar() {{
   }}
 }}
 
-[gainInput, sigmaSInput, showVorInput].forEach(el => el.addEventListener('input', draw));
-renderSidebar();
-resize();
+function resize() {{
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.floor(overlay.clientWidth * dpr));
+  const h = Math.max(1, Math.floor(overlay.clientHeight * dpr));
+  gpuCanvas.width = w;
+  gpuCanvas.height = h;
+  overlay.width = w;
+  overlay.height = h;
+  draw();
+}}
+
+window.addEventListener('resize', resize);
+[gainInput, sigmaSInput, showVorInput, showLabelsInput].forEach(el => el.addEventListener('input', draw));
+
+initWebGPU().then(() => {{
+  renderSidebar();
+  resize();
+}});
 </script>
 </body>
 </html>

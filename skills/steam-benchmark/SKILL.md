@@ -16,18 +16,20 @@ This skill implements the `@SyntheticBeef` challenge ([Tweet](https://x.com/Synt
 
 ## 1. Quick Benchmark Run (Built-in Seed or Procedural Scale)
 
+Bare filenames passed to `--svg`, `--html`, or `--out` automatically write into `out/` (gitignored) so the repository root stays clean.
+
 ```bash
-# Run on the 12 canonical Steam archetypes and emit SVG + interactive WebGPU HTML
+# Run on the 12 canonical Steam archetypes and emit SVG + interactive WebGPU HTML into out/
 cargo run --release -p lacuna-cli -- demo steam \
   --top-k 5 \
-  --svg steam_voids.svg \
-  --html steam_explorer.html
+  --svg out/steam_voids.svg \
+  --html out/steam_explorer.html
 
 # Scale up to a larger clustered catalog (e.g., 500 or 10,000 games)
 cargo run --release -p lacuna-cli -- demo steam \
   --count 1000 \
   --top-k 5 \
-  --json > steam_1k_results.json
+  --json > out/steam_1k_results.json
 ```
 
 ## 2. Live Abduction + Jev System One Viability Judge

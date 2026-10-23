@@ -3,7 +3,7 @@
 
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::Arc;
 
@@ -87,6 +87,24 @@ pub fn run(args: &[String]) -> Result<String, String> {
     }
 }
 
+/// Resolves an output path so bare filenames (e.g. `steam_explorer.html`) are placed inside
+/// `out/` rather than cluttering the repository root, and ensures parent directories exist.
+fn write_output_file(raw_path: &Path, content: &str) -> Result<PathBuf, String> {
+    let resolved = if raw_path.parent().is_none_or(|p| p.as_os_str().is_empty()) {
+        PathBuf::from("out").join(raw_path)
+    } else {
+        raw_path.to_path_buf()
+    };
+    if let Some(parent) = resolved.parent()
+        && !parent.as_os_str().is_empty()
+    {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("create directory {}: {e}", parent.display()))?;
+    }
+    fs::write(&resolved, content).map_err(|e| format!("write {}: {e}", resolved.display()))?;
+    Ok(resolved)
+}
+
 fn cmd_schema(args: &[String]) -> Result<String, String> {
     let _ = args;
     let schema = steam_domain_schema();
@@ -122,12 +140,12 @@ fn cmd_seed(args: &[String]) -> Result<String, String> {
     let snapshot = generate_steam_catalog(count);
     let json_str = serde_json::to_string_pretty(&snapshot).map_err(|e| e.to_string())?;
     if let Some(path) = out_path {
-        fs::write(&path, &json_str).map_err(|e| format!("write {}: {e}", path.display()))?;
+        let written = write_output_file(&path, &json_str)?;
         Ok(json!({
             "status": "ok",
             "domain_id": snapshot.schema.domain_id,
             "entity_count": snapshot.entities.len(),
-            "output_path": path,
+            "output_path": written,
         })
         .to_string())
     } else {
@@ -194,12 +212,12 @@ fn cmd_ingest(args: &[String]) -> Result<String, String> {
     let snapshot = CorpusSnapshot { schema, entities };
     let serialized = serde_json::to_string_pretty(&snapshot).map_err(|e| e.to_string())?;
     if let Some(out) = out_path {
-        fs::write(&out, &serialized).map_err(|e| format!("write {}: {e}", out.display()))?;
+        let written = write_output_file(&out, &serialized)?;
         Ok(json!({
             "status": "ok",
             "domain_id": snapshot.schema.domain_id,
             "entity_count": snapshot.entities.len(),
-            "output_path": out,
+            "output_path": written,
         })
         .to_string())
     } else {
@@ -567,14 +585,18 @@ fn cmd_field(args: &[String]) -> Result<String, String> {
     let opts = parse_common_opts(args)?;
     let bundle = build_explorer_bundle(&opts)?;
 
-    if let Some(ref svg_path) = opts.svg_out {
+    let svg_written = if let Some(ref svg_path) = opts.svg_out {
         let svg = render_svg_manifold(&bundle, 960, 720);
-        fs::write(svg_path, svg).map_err(|e| format!("write {}: {e}", svg_path.display()))?;
-    }
-    if let Some(ref html_path) = opts.html_out {
+        Some(write_output_file(svg_path, &svg)?)
+    } else {
+        None
+    };
+    let html_written = if let Some(ref html_path) = opts.html_out {
         let html = render_webgpu_explorer_html(&bundle)?;
-        fs::write(html_path, html).map_err(|e| format!("write {}: {e}", html_path.display()))?;
-    }
+        Some(write_output_file(html_path, &html)?)
+    } else {
+        None
+    };
 
     if opts.json_output {
         return serde_json::to_string_pretty(&json!({
@@ -582,8 +604,8 @@ fn cmd_field(args: &[String]) -> Result<String, String> {
             "entity_count": bundle.snapshot.entities.len(),
             "void_count": bundle.voids.len(),
             "resolution": bundle.field.resolution,
-            "svg_written": opts.svg_out,
-            "html_written": opts.html_out,
+            "svg_written": svg_written,
+            "html_written": html_written,
             "top_voids": bundle.voids,
             "opportunities": bundle.opportunities,
         }))
@@ -596,11 +618,11 @@ fn cmd_field(args: &[String]) -> Result<String, String> {
         bundle.field.resolution,
         bundle.snapshot.entities.len(),
         bundle.opportunities.len(),
-        opts.svg_out
+        svg_written
             .as_ref()
             .map(|p| format!(" SVG -> {}", p.display()))
             .unwrap_or_default(),
-        opts.html_out
+        html_written
             .as_ref()
             .map(|p| format!(" HTML -> {}", p.display()))
             .unwrap_or_default(),
@@ -617,14 +639,18 @@ fn cmd_demo(args: &[String]) -> Result<String, String> {
     let opts = parse_common_opts(&args[1..])?;
     let bundle = build_explorer_bundle(&opts)?;
 
-    if let Some(ref svg_path) = opts.svg_out {
+    let svg_written = if let Some(ref svg_path) = opts.svg_out {
         let svg = render_svg_manifold(&bundle, 960, 720);
-        fs::write(svg_path, svg).map_err(|e| format!("write {}: {e}", svg_path.display()))?;
-    }
-    if let Some(ref html_path) = opts.html_out {
+        Some(write_output_file(svg_path, &svg)?)
+    } else {
+        None
+    };
+    let html_written = if let Some(ref html_path) = opts.html_out {
         let html = render_webgpu_explorer_html(&bundle)?;
-        fs::write(html_path, html).map_err(|e| format!("write {}: {e}", html_path.display()))?;
-    }
+        Some(write_output_file(html_path, &html)?)
+    } else {
+        None
+    };
 
     if opts.json_output {
         return serde_json::to_string_pretty(&json!({
@@ -632,8 +658,8 @@ fn cmd_demo(args: &[String]) -> Result<String, String> {
             "entity_count": bundle.snapshot.entities.len(),
             "opportunities": bundle.opportunities,
             "voids": bundle.voids,
-            "svg_written": opts.svg_out,
-            "html_written": opts.html_out,
+            "svg_written": svg_written,
+            "html_written": html_written,
         }))
         .map_err(|e| e.to_string());
     }
@@ -663,6 +689,12 @@ fn cmd_demo(args: &[String]) -> Result<String, String> {
             opp.closed_loop_proof.min_distance_to_existing_entity,
             opp.closed_loop_proof.closest_existing_entity_name,
         ));
+    }
+    if let Some(ref p) = svg_written {
+        report.push_str(&format!("  Wrote SVG  -> {}\n", p.display()));
+    }
+    if let Some(ref p) = html_written {
+        report.push_str(&format!("  Wrote HTML -> {}\n", p.display()));
     }
     Ok(report.trim_end().to_string())
 }
